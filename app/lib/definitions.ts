@@ -2,6 +2,7 @@
 // It describes the shape of the data, and what data type each property should accept.
 // For simplicity of teaching, we're manually defining these types.
 // However, these types are generated automatically if you're using an ORM such as Prisma.
+
 export type User = {
   id: string;
   name: string;
@@ -39,8 +40,18 @@ export type LatestInvoice = {
   amount: string;
 };
 
+export type LatestUser = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 // The database returns a number for amount, but we later format it to a string with the formatCurrency function
 export type LatestInvoiceRaw = Omit<LatestInvoice, 'amount'> & {
+  amount: number;
+};
+
+export type LatestUserRaw = Omit<LatestUser, 'amount'> & {
   amount: number;
 };
 
@@ -53,6 +64,12 @@ export type InvoicesTable = {
   date: string;
   amount: number;
   status: 'pending' | 'paid';
+};
+
+export type UsersTable = {
+  id: string;
+  name: string;
+  email: string;
 };
 
 export type CustomersTableType = {
@@ -85,4 +102,11 @@ export type InvoiceForm = {
   customer_id: string;
   amount: number;
   status: 'pending' | 'paid';
+};
+
+export type UserForm = {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
 };

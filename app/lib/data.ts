@@ -3,14 +3,96 @@ import {
   CustomerField,
   CustomersTableType,
   InvoiceForm,
+  UserForm,
   InvoicesTable,
   LatestInvoiceRaw,
   User,
   Revenue,
+  UsersTable,
 } from './definitions';
+
 import { formatCurrency } from './utils';
 import { unstable_noStore as noStore } from 'next/cache';
 
+const ITEMS_PER_PAGE = 6;
+
+export async function fetchUsers() {
+  try {
+    const data = await sql<User>`SELECT * FROM users ORDER BY name ASC`;
+    return data.rows;
+  } catch (error) {
+    console.error('Failed to fetch users:', error);
+    throw new Error('Failed to fetch users.');
+  }
+}
+
+
+
+export async function fetchAllUsers() {
+  try {
+    const users = await sql<User>`SELECT * FROM users`;
+    return users.rows;
+  } catch (error) {
+    console.error('Failed to fetch all users:', error);
+    throw new Error('Failed to fetch all users.');
+  }
+}
+
+export async function fetchLast10Users() {
+  try {
+    const users = await sql<User>`SELECT * FROM users ORDER BY created_at DESC LIMIT 10`;
+    return users.rows;
+  } catch (error) {
+    console.error('Failed to fetch last 10 users:', error);
+    throw new Error('Failed to fetch last 10 users.');
+  }
+}
+
+export async function fetchUsersPages(query: string) {
+  noStore();
+  try {
+    const count = await sql`SELECT COUNT(*)
+    FROM users
+    WHERE
+      users.name ILIKE ${`%${query}%`} OR
+      users.email ILIKE ${`%${query}%`} 
+  `;
+
+    const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch total number of invoices.');
+  }
+}
+
+export async function fetchFilteredUsers(
+  query: string,
+  currentPage: number,
+) {
+  noStore();
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  try {
+    const users = await sql<UsersTable>`
+      SELECT
+        users.id,
+        users.name,
+        users.email
+      FROM users
+      WHERE
+        users.name ILIKE ${`%${query}%`} OR
+        users.email ILIKE ${`%${query}%`} 
+      ORDER BY users.id DESC
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+    `;
+
+    return users.rows;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch users.');
+  }
+}
 
 export async function fetchRevenue() {
   // Add noStore() here to prevent the response from being cached.
@@ -21,7 +103,7 @@ export async function fetchRevenue() {
     // Don't do this in production :)
 
     console.log('Fetching revenue data...');
-    await new Promise((resolve) => setTimeout(resolve, 7000));
+    await new Promise((resolve) => setTimeout(resolve, 4000));
 
     const data = await sql<Revenue>`SELECT * FROM revenue`;
 
@@ -91,7 +173,6 @@ export async function fetchCardData() {
   }
 }
 
-const ITEMS_PER_PAGE = 6;
 export async function fetchFilteredInvoices(
   query: string,
   currentPage: number,
@@ -147,6 +228,23 @@ export async function fetchInvoicesPages(query: string) {
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch total number of invoices.');
+  }
+}
+
+export async function fetchUserById(id: string): Promise<UserForm | null> {
+  noStore();
+  try {
+    const data = await sql<UserForm>`
+      SELECT * FROM users WHERE id=${id}`;
+
+    if (!data.rows.length) {
+      return null; // Handle case where no user found
+    }
+
+    return data.rows[0]; // Return the first user object
+  } catch (error) {
+    console.error('Failed to fetch user:', error);
+    throw new Error('Failed to fetch user.');
   }
 }
 

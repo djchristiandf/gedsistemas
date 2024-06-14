@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  UserPlusIcon,
   UserGroupIcon,
   HomeIcon,
   DocumentDuplicateIcon,
@@ -19,6 +20,7 @@ const links = [
     icon: DocumentDuplicateIcon,
   },
   { name: 'Customers', href: '/dashboard/customers', icon: UserGroupIcon },
+  { name: 'Users', href: '/dashboard/users', icon: UserPlusIcon}
 ];
 
 export default function NavLinks() {
